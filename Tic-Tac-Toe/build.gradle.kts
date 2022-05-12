@@ -52,6 +52,12 @@ kotlin {
                 implementation("io.ktor:ktor-server-core:$ktorVersion")
                 implementation("io.ktor:ktor-server-netty:$ktorVersion")
                 implementation("ch.qos.logback:logback-classic:$logbackVersion")
+                implementation("org.jetbrains.exposed:exposed-core:0.38.2")
+                implementation("org.jetbrains.exposed:exposed-dao:0.38.2")
+                implementation("org.jetbrains.exposed:exposed-jdbc:0.38.2")
+                implementation("org.jetbrains.exposed:exposed-java-time:0.38.2")
+                implementation("mysql:mysql-connector-java:runtime")
+
             }
         }
         val jvmTest by getting

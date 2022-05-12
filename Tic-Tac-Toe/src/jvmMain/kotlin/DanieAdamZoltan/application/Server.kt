@@ -8,7 +8,26 @@ import io.ktor.routing.*
 import io.ktor.serialization.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.javatime.CurrentDateTime
+import org.jetbrains.exposed.sql.javatime.datetime
 
+
+object Steps : Table() {
+    val id = integer("id")
+    val step = varchar("step", 1)
+    val dateCreated = datetime("date_created").defaultExpression(CurrentDateTime())
+    val gameId = (integer("game_id") references Games.id).nullable()
+
+    override val primaryKey = PrimaryKey(id, name = "PK_Steps_ID")
+}
+
+object Games : Table(){
+    val id = integer("id").autoIncrement()
+    val winner = varchar("winner", 50)
+
+    override val primaryKey = PrimaryKey(id, name = "PK_Games_ID")
+}
 
 val board = mutableListOf(
     Board("X","1"),
@@ -22,6 +41,9 @@ val board = mutableListOf(
     )
 
 fun main() {
+
+    Database.connect("jdbc:mysql://localhost:3306/tic_tac_toe", driver = "", user = "root", password = "")
+
     embeddedServer(Netty, 8090) {
         install(ContentNegotiation) {
             json()
