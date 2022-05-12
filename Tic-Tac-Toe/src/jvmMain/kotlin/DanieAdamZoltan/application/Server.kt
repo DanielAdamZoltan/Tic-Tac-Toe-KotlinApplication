@@ -11,6 +11,36 @@ import io.ktor.server.netty.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
+import org.jetbrains.exposed.sql.transactions.transaction
+import java.sql.DriverManager
+import java.sql.SQLException
+import java.util.*
+import java.sql.*
+
+internal var conn: Connection? = null
+internal var username = "madam666"
+internal var password = "A@DC3tXme$/P3x_"
+
+//fun getConnection() {
+//    val connectionProperties = Properties()
+//    connectionProperties.put("user", username)
+//    connectionProperties.put("password", password)
+//    try {
+////        Class.forName("com.mysql.jdbc.Driver").newInstance()
+//        conn = DriverManager.getConnection(
+//            "jdbc:" + "mysql" + "://" +
+//                    "127.0.0.1" +
+//                    ":" + "3306" + "/" +
+//                    "tic_tac_toe",
+//            connectionProperties)
+//    } catch (exception: SQLException) {
+//// handle any errors
+//        exception.printStackTrace()
+//    } catch (exception: Exception) {
+//// handle any errors
+//        exception.printStackTrace()
+//    }
+//}
 
 
 object Steps : Table() {
@@ -29,21 +59,28 @@ object Games : Table(){
     override val primaryKey = PrimaryKey(id, name = "PK_Games_ID")
 }
 
-val board = mutableListOf(
-    Board("X","1"),
-    Board("o","2"),
-    Board("X","3"),
-    Board("o","4"),
-    Board("X","5"),
-    Board("o","6"),
-    Board("X","7"),
-    Board("o","8"),
-    )
 
 fun main() {
 
-    Database.connect("jdbc:mysql://localhost:3306/tic_tac_toe", driver = "", user = "root", password = "")
+//    getConnection()
 
+    Database.connect("jdbc:mysql://localhost:3306/tic_tac_toe", user = username, password = password)
+
+    val conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tic_tac_toe", username, password)
+
+    val query = conn.prepareStatement("Select * from games")
+
+    val result = query.executeQuery()
+
+    val games = mutableListOf<Game>()
+
+
+    println(games)
+    transaction {
+        addLogger(StdOutSqlLogger)
+
+        SchemaUtils.create(Games, Steps)
+    }
     embeddedServer(Netty, 8090) {
         install(ContentNegotiation) {
             json()
@@ -51,7 +88,6 @@ fun main() {
         install(CORS) {
             method(HttpMethod.Get)
             method(HttpMethod.Post)
-            method(HttpMethod.Delete)
             anyHost()
         }
         install(Compression) {
@@ -67,18 +103,20 @@ fun main() {
             static("/") {
                 resources("")
             }
-            route(Board.path) {
+            route(Game.path) {
 
                 get {
-                    call.respond(board)
+//                    call.respond(collection.find().toList())
+                    while (result.next()) {
+                        val id = result.getInt("id")
+
+                        val winner = result.getString("winner")
+
+                        games.add(Game(id, winner))
+                    }
                 }
                 post {
-                    board += call.receive<Board>()
-                    call.respond(HttpStatusCode.OK)
-                }
-                delete("/{id}"){
-                    val id = call.parameters["id"]?.toInt() ?: error("invalid delete request")
-                    board.removeIf{ it.id == id}
+//                    collection.insertOne(call.receive<Game>())
                     call.respond(HttpStatusCode.OK)
                 }
             }

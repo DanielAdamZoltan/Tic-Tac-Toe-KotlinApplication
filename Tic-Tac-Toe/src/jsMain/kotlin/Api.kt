@@ -11,17 +11,13 @@ val jsonClient = HttpClient {
     install(JsonFeature) { serializer = KotlinxSerializer()}
 }
 
-suspend fun getBoard(): List<Board> {
-    return jsonClient.get(endpoint + Board.path)
+suspend fun getGame(): List<Game> {
+    return jsonClient.get(endpoint + Game.path)
 }
 
-suspend fun addBoard(board: Board) {
-    jsonClient.post<Unit>(endpoint + Board.path) {
+suspend fun addGame(game: Game) {
+    jsonClient.post<Unit>(endpoint + Game.path) {
         contentType(ContentType.Application.Json)
-        body = board
+        body = game
     }
-}
-
-suspend fun deleteBoard(board: Board) {
-    jsonClient.delete<Unit>(endpoint + Board.path + "/${board.id}")
 }
