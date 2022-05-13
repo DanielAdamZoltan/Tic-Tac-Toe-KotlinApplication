@@ -1,6 +1,7 @@
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.*
+import io.ktor.html.respondHtml
 import io.ktor.http.content.*
 import io.ktor.request.*
 import io.ktor.response.*
@@ -13,9 +14,9 @@ import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.DriverManager
-import java.sql.SQLException
 import java.util.*
 import java.sql.*
+import kotlinx.html.*
 
 internal var conn: Connection? = null
 internal var username = "madam666"
@@ -66,22 +67,14 @@ fun main() {
 
     Database.connect("jdbc:mysql://localhost:3306/tic_tac_toe", user = username, password = password)
 
-    val conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tic_tac_toe", username, password)
-
-    val query = conn.prepareStatement("Select * from games")
-
-    val result = query.executeQuery()
-
-    val games = mutableListOf<Game>()
 
 
-    println(games)
     transaction {
         addLogger(StdOutSqlLogger)
 
         SchemaUtils.create(Games, Steps)
     }
-    embeddedServer(Netty, 8090) {
+    embeddedServer(Netty, 8090, host = "127.0.0.1") {
         install(ContentNegotiation) {
             json()
         }
@@ -93,27 +86,39 @@ fun main() {
         install(Compression) {
             gzip()
         }
+
+
+        val conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tic_tac_toe", username, password)
+
+        val query = conn.prepareStatement("Select * from games")
+
+        val result = query.executeQuery()
+
+        val games = mutableListOf<Game>()
+
         routing {
             get("/") {
-                call.respondText(
-                    this::class.java.classLoader.getResource("index.html")!!.readText(),
-                    ContentType.Text.Html
+                call.respondHtml(HttpStatusCode.OK, HTML::index)
+//                call.respondText(
+//                    this::class.java.classLoader.getResource("index.html")!!.readText(),
+//                    ContentType.Text.Html
                 )
             }
-            static("/") {
-                resources("")
+            static("/static") {
+                resources()
             }
             route(Game.path) {
 
                 get {
 //                    call.respond(collection.find().toList())
-                    while (result.next()) {
-                        val id = result.getInt("id")
-
-                        val winner = result.getString("winner")
-
-                        games.add(Game(id, winner))
-                    }
+//                    while (result.next()) {
+//                        val id = result.getInt("id")
+//
+//                        val winner = result.getString("winner")
+//
+//                        games.add(Game(id, winner))
+//                    }
+                    println("mukodik")
                 }
                 post {
 //                    collection.insertOne(call.receive<Game>())
